@@ -1,8 +1,8 @@
-#!/bin/bash -e
+#!/bin/bash
 
-hub="hisplan"
-image_name="cromwell-velocyto"
-version="0.17.17"
+source config.sh
+
+image_name="cromwell-${image_name}"
 
 echo "Building ${image_name}:${version}..."
 
@@ -17,12 +17,20 @@ cat Dockerfile.cromwell
 # build it
 docker build -t ${image_name}:${version} -f Dockerfile.cromwell .
 
-echo "Packaging ${hub}/${image_name}:${version}..."
+echo "Packaging ${registry}/${image_name}:${version}..."
 
 #
 # tag it and push it to docker hub
 #
 
-docker login
-docker tag ${image_name}:${version} ${hub}/${image_name}:${version}
-docker push ${hub}/${image_name}:${version}
+docker tag ${image_name}:${version} ${registry}/${image_name}:${version}
+if [ $create_ecr_repo == 1 ]
+then
+    # only create if not exist
+    aws ecr describe-repositories --repository-name ${image_name} 2> /dev/null
+    if [ $? != 0 ]
+    then
+        aws ecr create-repository --repository-name ${image_name}
+    fi
+fi
+docker push ${registry}/${image_name}:${version}

@@ -1,10 +1,17 @@
 #!/bin/bash
 
-hub="hisplan"
-image_name="velocyto"
-version="0.17.17"
+source config.sh
 
-docker tag ${image_name}:${version} ${hub}/${image_name}:${version}
+echo "${registry}/${image_name}:${version}"
 
-docker login
-docker push ${hub}/${image_name}:${version}
+docker tag ${image_name}:${version} ${registry}/${image_name}:${version}
+if [ $create_ecr_repo == 1 ]
+then
+    # only create if not exist
+    aws ecr describe-repositories --repository-name ${image_name} 2> /dev/null
+    if [ $? != 0 ]
+    then
+        aws ecr create-repository --repository-name ${image_name}
+    fi
+fi
+docker push ${registry}/${image_name}:${version}
