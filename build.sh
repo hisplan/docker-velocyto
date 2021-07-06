@@ -1,6 +1,5 @@
 #!/bin/bash
 
-image_name="velocyto"
-version="0.17.17"
+source config.sh
 
 docker build -t ${image_name}:${version} .
